@@ -1,19 +1,28 @@
+import asyncio
+
+import logging
+
 import os
+
 import discord
 from discord.ext import commands
-import asyncio
-import logging
+
+from sqlalchemy.orm import Session
+
 from db.core.models.db_helper import db_helper
 from db.core.models.base import Base
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True 
 
-bot = commands.Bot(command_prefix="/", intents=intents)
+
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 async def load_cogs(bot: commands.Bot) -> None:
     try:
@@ -29,6 +38,7 @@ async def start_db() -> None:
         logger.info("База данных инициализирована")
     except Exception as e:
         logger.error(f"Ошибка инициализации БД: {e}")
+
 
 @bot.event
 async def on_ready() -> None:
@@ -51,6 +61,7 @@ async def main() -> None:
         )
     except Exception as e:
         logger.critical(f"Ошибка запуска бота: {e}")
+
 
 if __name__ == "__main__":
     try:
