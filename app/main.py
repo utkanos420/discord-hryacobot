@@ -1,6 +1,5 @@
 import asyncio
-import logging
-import os
+import os, sys
 
 import discord
 from discord.ext import commands
@@ -13,9 +12,18 @@ from db.core.models.db_helper import db_helper
 from db.core.models.base import Base
 from api import router as api_router
 
+from configs.config import bot_settings
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from loguru import logger
+import logging
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'utils')))
+
+from utils import setup_logging
+
+logger = setup_logging()
+logger.critical("Ахуеть?")
 
 
 @asynccontextmanager
@@ -33,7 +41,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix=bot_settings.discord_bot_prefix, intents=intents)
 
 
 async def load_cogs(bot: commands.Bot) -> None:
@@ -65,15 +73,19 @@ async def main() -> None:
     await start_db()
     await load_cogs(bot)
 
-    # Асинхронный запуск FastAPI
-    config = uvicorn.Config(app=app, port=8000, log_level="debug")
+    config = uvicorn.Config(
+    app=app,
+    port=8000,
+    log_level="debug",
+    log_config=None
+)
+
     server = uvicorn.Server(config)
 
-    token = ""
     try:
         await asyncio.gather(
             server.serve(),
-            bot.start(token),
+            bot.start(bot_settings.discord_bot_token),
         )
     except discord.errors.PrivilegedIntentsRequired:
         logger.critical(
